@@ -1,0 +1,207 @@
+.logs-card {
+  padding: 1.5rem;
+  animation: fadeInUp 0.5s ease both;
+}
+
+.logs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.logs-title {
+  font-size: 0.85rem;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  letter-spacing: 0.1em;
+}
+
+.logs-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logs-filter {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition);
+}
+
+.logs-filter:focus,
+.logs-filter:hover {
+  border-color: var(--cyan-dim);
+  color: var(--text-primary);
+}
+
+.logs-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.logs-table thead {
+  background: rgba(0,240,255,0.04);
+  border-bottom: 1px solid var(--border);
+}
+
+.logs-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.logs-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background var(--transition);
+  animation: fadeIn 0.3s ease;
+}
+
+.logs-table tbody tr:hover {
+  background: rgba(0,240,255,0.03);
+}
+
+.logs-table td {
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.logs-table td:first-child {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.logs-table td.action-col {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.logs-table td.path-col {
+  color: var(--cyan);
+  font-size: 0.7rem;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logs-row-num {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  width: 40px;
+  text-align: center;
+}
+
+/* Activity Log sidebar widget */
+.activity-log-card {
+  padding: 1.5rem;
+  height: 100%;
+  animation: fadeInUp 0.5s ease 0.5s both;
+}
+
+.activity-log-title {
+  font-size: 0.85rem;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  letter-spacing: 0.1em;
+  margin-bottom: 1.25rem;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.activity-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  animation: fadeIn 0.3s ease;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 20px;
+}
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.activity-dot.safe {
+  border-color: var(--green);
+  background: var(--green-dim);
+  box-shadow: 0 0 6px rgba(0,255,136,0.4);
+}
+
+.activity-dot.threat {
+  border-color: var(--red);
+  background: var(--red-dim);
+  box-shadow: 0 0 6px rgba(255,34,68,0.4);
+  animation: pulse-red 2s infinite;
+}
+
+.activity-dot.info {
+  border-color: var(--cyan);
+  background: var(--cyan-dim);
+}
+
+.activity-line {
+  flex: 1;
+  width: 1px;
+  background: var(--border);
+  margin: 3px 0;
+}
+
+.activity-content { flex: 1; min-width: 0; }
+
+.activity-action {
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-time {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
