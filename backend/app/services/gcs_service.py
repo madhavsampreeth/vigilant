@@ -2,7 +2,7 @@ import os
 from google.cloud import storage
 
 # Set credentials path
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "app/services/service-account.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "service-account.json"
 
 client = storage.Client()
 
