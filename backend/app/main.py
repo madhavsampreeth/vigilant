@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from app.services.firebase_init import init_firebase
 
 # Firebase init
 from app.services import firebase_init
-
+init_firebase()
 # Direct imports (NO try/except)
 from app.routes import upload, analyze, register, result
 
