@@ -30,7 +30,7 @@ export const analyzeByUrl = async (videoUrl) => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-    }
+    } 
   );
   return response.data;
 }; 
