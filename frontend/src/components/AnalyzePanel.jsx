@@ -13,7 +13,7 @@ function AnalyzePanel() {
   const [loadingText, setLoadingText] = useState("Initializing scan...");
   const [scanStep, setScanStep] = useState("");
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = "https://vigilant-api-736723420467.asia-south1.run.app";
 
   useEffect(() => {
     if (!file) {
