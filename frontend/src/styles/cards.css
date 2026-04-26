@@ -331,3 +331,11 @@
   text-shadow: 0 0 10px var(--red-glow);
   flex-shrink: 0;
 }
+
+.alert-feed-card {
+  overflow: hidden;
+}
+
+.alert-list {
+  flex: 1;
+}

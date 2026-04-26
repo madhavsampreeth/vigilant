@@ -1,29 +1,52 @@
 from firebase_admin import firestore
-from app.services.firebase_init import *
+from app.services.firebase_init import init_firebase
 
 
-def save_fingerprint(video_id, data):
-    db = firestore.client()
+def get_db():
+    """
+    Initialize Firebase safely and return Firestore client
+    """
+    init_firebase()
+    return firestore.client()
 
-    db.collection("videos").document(video_id).set({
-        "hashes": data["hashes"],
-        "embeddings": data["embeddings"]
-    })
+
+# 🔥 SAVE VIDEO DATA
+def save_video_data(video_id: str, data: dict):
+    db = get_db()
+    db.collection("videos").document(video_id).set(data)
 
 
-def load_fingerprints():
-    db = firestore.client()
+# 🔥 GET VIDEO DATA
+def get_video_data(video_id: str):
+    db = get_db()
+    doc = db.collection("videos").document(video_id).get()
 
+    if doc.exists:
+        return doc.to_dict()
+    return None
+
+
+# 🔥 GET ALL VIDEOS
+def get_all_videos():
+    db = get_db()
     docs = db.collection("videos").stream()
 
-    result = {}
-
+    results = []
     for doc in docs:
-        d = doc.to_dict()
+        item = doc.to_dict()
+        item["id"] = doc.id
+        results.append(item)
 
-        result[doc.id] = {
-            "hashes": d.get("hashes", []),
-            "embeddings": d.get("embeddings", [])
-        }
+    return results
 
-    return result
+
+# 🔥 UPDATE VIDEO DATA
+def update_video_data(video_id: str, data: dict):
+    db = get_db()
+    db.collection("videos").document(video_id).update(data)
+
+
+# 🔥 DELETE VIDEO
+def delete_video(video_id: str):
+    db = get_db()
+    db.collection("videos").document(video_id).delete()

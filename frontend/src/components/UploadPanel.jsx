@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { registerVideo } from "../services/api";
 import "../styles/forms.css";
 import toast from "react-hot-toast";
 
@@ -13,15 +12,15 @@ function UploadPanel() {
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState("Uploading asset...");
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     let timer;
-
     if (loading) {
       timer = setInterval(() => {
         setProgress((prev) => (prev >= 90 ? prev : prev + 10));
       }, 300);
     }
-
     return () => clearInterval(timer);
   }, [loading]);
 
@@ -36,7 +35,6 @@ function UploadPanel() {
     ];
 
     let i = 0;
-
     const timer = setInterval(() => {
       setLoadingText(steps[i % steps.length]);
       i++;
@@ -88,30 +86,43 @@ function UploadPanel() {
     try {
       setLoading(true);
 
+      // 🔥 STEP 1: GET GCS URL
+      const res1 = await fetch(`${API_URL}/gcs/generate-upload-url`);
+      const { upload_url, video_url } = await res1.json();
+
+      // 🔥 STEP 2: UPLOAD TO GCS
+      await fetch(upload_url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type || "video/mp4"
+        },
+        body: file
+      });
+
+      // 🔥 STEP 3: REGISTER
       const formData = new FormData();
       formData.append("video_id", videoName);
-      formData.append("file", file);
+      formData.append("video_url", video_url);
 
-      const res = await registerVideo(
-        formData,
-        (percent) => setProgress(percent)
-      );
+      const res2 = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        body: formData
+      });
 
-      if (res.error) {
-        setError(res.error);
+      const data = await res2.json();
+
+      if (data.error) {
+        setError(data.error);
         toast.error("Upload failed!");
       } else {
         setProgress(100);
-        setMsg(res.message || `Video "${videoName}" uploaded successfully`);
+        setMsg(`Video "${videoName}" uploaded successfully`);
         toast.success("Video uploaded successfully!");
         resetForm();
       }
+
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        err.message ||
-        "Upload failed"
-      );
+      setError(err.message || "Upload failed");
       toast.error("Upload failed!");
     } finally {
       setLoading(false);

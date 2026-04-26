@@ -46,3 +46,16 @@
     grid-template-columns:1fr;
   }
 }
+
+.dashboard-alerts,
+.dashboard-activity {
+  height: 420px;
+  display: flex;
+}
+
+.dashboard-alerts .glass-card,
+.dashboard-activity .glass-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}

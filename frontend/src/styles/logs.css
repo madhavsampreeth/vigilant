@@ -205,3 +205,22 @@
   font-size: 0.62rem;
   color: var(--text-muted);
 }
+
+.activity-log-card {
+  overflow: hidden;
+}
+
+.activity-list {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 6px;
+}
+
+.activity-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.activity-list::-webkit-scrollbar-thumb {
+  background: rgba(0,255,255,0.4);
+  border-radius: 10px;
+}

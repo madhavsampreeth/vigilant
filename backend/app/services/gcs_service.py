@@ -1,12 +1,8 @@
-import os
 from google.cloud import storage
-
-# Set credentials path
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "service-account.json"
 
 client = storage.Client()
 
-BUCKET_NAME = "vigilant-vid-storage"  # change if needed
+BUCKET_NAME = "vigilant-vid-storage1"
 
 
 def upload_file_to_gcs(local_path, destination_blob_name):

@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-opencv-python-headless
+opencv-python-headless==4.8.1.78
 pillow
 imagehash
 google-cloud-storage
@@ -8,5 +8,5 @@ google-cloud-pubsub
 google-cloud-firestore
 firebase-admin
 python-multipart
-numpy
-mediapipe
+numpy==1.23.5
+mediapipe==0.10.8

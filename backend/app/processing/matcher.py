@@ -24,7 +24,7 @@ def compare_pair(h1, h2, e1, e2):
     dist = hamming_distance(h1, h2)
     hsim = 1 - (dist / 64)
 
-    # Balanced hybrid score
+    # Hybrid score
     score = (0.45 * emb) + (0.55 * hsim)
 
     return score, hsim, emb
@@ -37,19 +37,19 @@ def match_videos(
     stored_embeddings,
     window=5
 ):
+    # 🔥 FIX: fallback if embeddings missing
     if not stored_embeddings:
-        return 0, 0, 0, []
+        stored_embeddings = ["0"] * len(stored_hashes)
 
-    # Convert DB embeddings strings -> vectors
-    stored_emb = [
-        [float(x) for x in item.split(",")]
-        for item in stored_embeddings
-    ]
+    # convert embeddings string → list
+    stored_emb = []
+    for item in stored_embeddings:
+        try:
+            stored_emb.append([float(x) for x in item.split(",")])
+        except:
+            stored_emb.append([0])
 
-    max_compare = min(
-        len(suspect_hashes),
-        len(suspect_embeddings)
-    )
+    max_compare = min(len(suspect_hashes), len(suspect_embeddings))
 
     if max_compare == 0:
         return 0, 0, 0, []
@@ -58,10 +58,6 @@ def match_videos(
     hash_scores = []
     emb_scores = []
 
-    # -----------------------------------
-    # Real timeline matching:
-    # each suspect frame searches nearby DB frames
-    # -----------------------------------
     for i in range(max_compare):
         best_local = 0
         best_hash = 0
@@ -90,10 +86,8 @@ def match_videos(
         hash_scores.append(best_hash)
         emb_scores.append(best_emb)
 
-    # overall average
     avg_score = sum(timeline_scores) / len(timeline_scores)
 
-    # boost strong top matches
     top_scores = sorted(timeline_scores, reverse=True)[:window]
     top_avg = sum(top_scores) / len(top_scores)
 

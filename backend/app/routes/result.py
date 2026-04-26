@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from firebase_admin import firestore
-from app.services.firestore_service import load_fingerprints
+from app.services.firestore_service import get_all_videos
 from datetime import datetime, timezone
 
 router = APIRouter()
@@ -33,9 +33,12 @@ def format_time(ts):
 def get_dashboard_data():
     db = firestore.client()
 
-    videos = load_fingerprints()
+    # 🔥 get videos
+    videos = get_all_videos()
+
     total_videos = len(videos)
 
+    # 🔥 fetch detections
     docs = list(
         db.collection("detections")
         .order_by("timestamp", direction=firestore.Query.DESCENDING)
@@ -87,10 +90,10 @@ def get_dashboard_data():
             "time": time_text
         })
 
-    # uploaded assets also add
-    for vid in list(videos.keys())[:5]:
+    # 🔥 recent uploads
+    for vid in videos[:5]:
         recent_activity.append({
-            "action": f"Asset registered - {vid}",
+            "action": f"Asset registered - {vid['id']}",
             "time": "Stored"
         })
 

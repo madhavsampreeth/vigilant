@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { analyzeVideo } from "../services/api";
 import "../styles/forms.css";
 import toast from "react-hot-toast";
 
@@ -13,6 +12,8 @@ function AnalyzePanel() {
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState("Initializing scan...");
   const [scanStep, setScanStep] = useState("");
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     if (!file) {
@@ -82,71 +83,85 @@ Generated: ${new Date().toLocaleString()}
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    setResult(null);
-    setError("");
-    setProgress(0);
+  setResult(null);
+  setError("");
+  setProgress(0);
 
-    if (!file) {
-      toast.error("Select suspect video");
-      return;
-    }
+  if (!file) {
+    toast.error("Select suspect video");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      setLoadingText("Uploading suspect stream...");
-      setScanStep("Upload received...");
+  try {
+    setLoading(true);
+    setLoadingText("Uploading suspect stream...");
+    setScanStep("Upload received...");
 
-      const formData = new FormData();
-      formData.append("video_name", videoName);
-      formData.append("file", file);
+    // STEP 1: GET SIGNED URL
+    const res1 = await fetch(`${API_URL}/gcs/generate-upload-url`);
+    const { upload_url, video_url } = await res1.json();
 
-      const res = await analyzeVideo(formData, (p) => {
-        const mapped = Math.min(70, Math.round(p * 0.7));
-        setProgress(mapped);
+    // STEP 2: UPLOAD TO GCS
+    await fetch(upload_url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type || "video/mp4",
+      },
+      body: file,
+    });
 
-        if (mapped < 30) {
-          setLoadingText("Uploading suspect stream...");
-          setScanStep("Upload received...");
-        } else if (mapped < 55) {
-          setLoadingText("Extracting frames...");
-          setScanStep("Frames received...");
-        } else {
-          setLoadingText("Comparing fingerprints...");
-          setScanStep("Running threat engine...");
-        }
-      });
+    setLoadingText("Analyzing...");
+    setScanStep("Comparing fingerprints...");
 
-      setLoadingText("Finalizing detection...");
-      setScanStep("Verdict ready");
-      setProgress(100);
+    // 🔥 STEP 3: FIXED ANALYZE CALL
+    const res = await fetch(`${API_URL}/analyze/`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+  },
+  body: new URLSearchParams({
+    video_url: video_url,
+  }),
+});
 
-      if (res.error) {
-        setError(res.error);
-        toast.error("Analysis failed!");
-      } else {
-        setResult(res);
+// 🔥 IMPORTANT
+if (!res.ok) {
+  const text = await res.text();
+  console.error("ANALYZE ERROR:", res.status, text);
+  throw new Error("Backend error");
+}
 
-        if (res.status === "Safe") {
-          toast.success("Safe Stream Detected");
-        } else if (res.status === "Suspicious") {
-          toast("Suspicious Stream Found");
-        } else {
-          toast.error("Pirated Content Detected!");
-        }
-      }
-    } catch (err) {
-      setError(
-        err.response?.data?.error ||
-          err.message ||
-          "Analysis failed"
-      );
+const data = await res.json();
+
+    setLoadingText("Finalizing detection...");
+    setScanStep("Verdict ready");
+    setProgress(100);
+
+    if (data.error) {
+      setError(data.error);
       toast.error("Analysis failed!");
-    } finally {
-      setLoading(false);
+    } else {
+      setResult(data);
+
+      if (data.status === "Safe") {
+        toast.success("Safe Stream Detected");
+      } else if (data.status === "Suspicious") {
+        toast("Suspicious Stream Found");
+      } else {
+        toast.error("Pirated Content Detected!");
+      }
     }
-  };
+
+  } catch (err) {
+    console.error(err);
+    setError("Analysis failed");
+    toast.error("Analysis failed!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const statusColor = () => {
     if (!result) return "#00e5ff";

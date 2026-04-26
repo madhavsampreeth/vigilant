@@ -1,22 +1,39 @@
+
 from fastapi import APIRouter, UploadFile, File
 import os
 import uuid
 import cv2
 from datetime import datetime
 from firebase_admin import firestore
-
+from fastapi import Form
+from app.services.firebase_init import init_firebase
 from app.processing.frame_extractor import extract_frames
 from app.processing.preprocessing import preprocess_frame
 from app.processing.hashing import generate_hash
 from app.processing.ai_embedding import get_embedding
 from app.processing.matcher import match_videos
-from app.services.firestore_service import load_fingerprints
-
+from app.services.firestore_service import get_all_videos
+from google.cloud import storage
 router = APIRouter()
 
 TEMP_DIR = "/tmp"
 THUMB_DIR = "/tmp/static/thumbs"
+from google.cloud import storage
 
+def download_from_gcs(gcs_url):
+    client = storage.Client()
+
+    parts = gcs_url.replace("gs://", "").split("/", 1)
+    bucket_name = parts[0]
+    blob_name = parts[1]
+
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+
+    local_path = f"/tmp/{blob_name.split('/')[-1]}"
+    blob.download_to_filename(local_path)
+
+    return local_path
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(THUMB_DIR, exist_ok=True)
 
@@ -38,17 +55,17 @@ def sec_to_mmss(sec):
 
 
 @router.post("/")
-async def analyze_video(file: UploadFile = File(...)):
+async def analyze_video(video_url: str = Form(...)):
     temp_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}.mp4")
 
     try:
-        content = await file.read()
+        # 🔥 Firebase init (IMPORTANT)
+        init_firebase()
 
-        with open(temp_path, "wb") as f:
-            f.write(content)
+        temp_path = download_from_gcs(video_url)
 
-        # Extract frames (1 frame every 2 sec)
-        frames = extract_frames(temp_path, fps=0.5)[:40]
+        # Extract frames
+        frames = extract_frames(temp_path, fps=1)[:80]
 
         suspect_hashes = []
         suspect_embeddings = []
@@ -56,15 +73,19 @@ async def analyze_video(file: UploadFile = File(...)):
         for frame in frames:
             processed = preprocess_frame(frame)
 
-            suspect_hashes.append(
-                str(generate_hash(processed))
-            )
+            suspect_hashes.append(str(generate_hash(processed)))
+            suspect_embeddings.append(get_embedding(frame))
 
-            suspect_embeddings.append(
-                get_embedding(frame)
-            )
+        # 🔥 Load DB from Firestore
+        videos = get_all_videos()
 
-        db_data = load_fingerprints()
+        db_data = {
+            vid["id"]: {
+                "hashes": vid.get("hashes", []),
+                "embeddings": vid.get("embeddings", [])
+            }
+            for vid in videos
+        }
 
         if not db_data:
             return {"error": "No videos found in database"}
@@ -99,9 +120,7 @@ async def analyze_video(file: UploadFile = File(...)):
             strong_matches
         )
 
-        # ----------------------------
-        # Segment Detection
-        # ----------------------------
+        # -------- Segment Detection --------
         raw_segments = []
 
         for i, score in enumerate(best_timeline):
@@ -130,9 +149,7 @@ async def analyze_video(file: UploadFile = File(...)):
                 "end": sec_to_mmss(cur_end)
             })
 
-        # ----------------------------
-        # Real Thumbnail Generation
-        # ----------------------------
+        # -------- Thumbnails --------
         thumbnails = []
 
         for idx, (start, end) in enumerate(raw_segments[:3]):
@@ -140,26 +157,32 @@ async def analyze_video(file: UploadFile = File(...)):
 
             if frame_index < len(frames):
                 filename = f"{uuid.uuid4()}.jpg"
-                filepath = os.path.join(
-                    THUMB_DIR,
-                    filename
-                )
+                filepath = os.path.join(THUMB_DIR, filename)
 
                 cv2.imwrite(filepath, frames[frame_index])
 
-                thumbnails.append(
-                    f"/static/thumbs/{filename}"
-                )
+                # Upload thumbnail to GCS
+                bucket = storage.Client().bucket("vigilant-vid-storage1")
+                blob = bucket.blob(f"thumbnails/{filename}")
+                blob.upload_from_filename(filepath)
 
-        # Save detection log
-        firestore.client().collection("detections").add({
+                public_url = f"https://storage.googleapis.com/vigilant-vid-storage1/thumbnails/{filename}"
+
+                thumbnails.append(public_url)
+
+        # 🔥 Save detection log
+        db = firestore.client()
+
+        db.collection("detections").add({
             "video": best_video,
             "score": best_score,
             "status": status,
             "confidence": confidence,
             "timestamp": datetime.utcnow()
         })
-
+        def gcs_to_http(url):
+            return url.replace("gs://", "https://storage.googleapis.com/")
+        thumbnails_http = thumbnails
         return {
             "matched_video": best_video,
             "similarity": round(best_score, 2),
@@ -169,7 +192,7 @@ async def analyze_video(file: UploadFile = File(...)):
             "confidence": confidence,
             "reason": reason,
             "segments": segments[:5],
-            "thumbnails": thumbnails
+            "thumbnails": thumbnails_http
         }
 
     except Exception as e:
