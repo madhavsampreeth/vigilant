@@ -46,5 +46,5 @@ export const getDashboardData = async () => {
   const response = await api.get("/result/");
   return response.data;
 };
-
+console.log("API URL:",import.meta.env.VITE_API_URL)
 export default api;
