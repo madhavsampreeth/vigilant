@@ -33,7 +33,7 @@ export const analyzeByUrl = async (videoUrl) => {
     }
   );
   return response.data;
-};
+}; 
 
 // 🔥 SIGNED URL
 export const getSignedUrl = async () => {
