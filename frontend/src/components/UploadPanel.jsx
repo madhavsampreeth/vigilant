@@ -104,7 +104,7 @@ function UploadPanel() {
       formData.append("video_id", videoName);
       formData.append("video_url", video_url);
 
-      const res2 = await fetch(`${API_URL}/register`, {
+      const res2 = await fetch(`${API_URL}/register/`, {
         method: "POST",
         body: formData
       });
