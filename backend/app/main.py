@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
-# ✅ Create app FIRST
-app = FastAPI(title="Vigilant API")
 
+# ✅ Create app FIRST
+app = FastAPI(title="Vigilant API",redirect_slashes=False)
 # Firebase init on startup
 @app.on_event("startup")
 def startup_event():
