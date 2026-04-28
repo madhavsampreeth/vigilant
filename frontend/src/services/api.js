@@ -8,7 +8,7 @@ const api = axios.create({
 
 // REGISTER (NOT USED NOW BUT SAFE)
 export const registerVideo = async (formData, onProgress) => {
-  const response = await api.post("/register/", formData, {
+  const response = await api.post("/register", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
