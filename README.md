@@ -1,5 +1,5 @@
 # Vigilant 🚨  
-### AI-Powered Smart Surveillance & Piracy Detection Platform
+### AI-Powered Smart Surveillance & Piracy Detection Platform 
 
 Vigilant is an AI-powered surveillance and piracy detection platform that uses intelligent video fingerprinting, cloud storage, and real-time analysis to identify duplicate or suspicious video content.  
 
